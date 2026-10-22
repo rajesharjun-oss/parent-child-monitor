@@ -7,6 +7,8 @@
 
 A powerful, open source parental control application for Android that provides uncompromising screen time management and digital wellness tools for families.
 
+> **Windows PC version:** A separate Windows 10/11 application with a boot-time Windows service, automatic agent recovery, installer, protected parent dashboard, application-usage summaries, limits, schedules, and privacy controls is available under [`pc/`](pc/README.md).
+
 ## 🌟 Features
 
 ### Core Functionality

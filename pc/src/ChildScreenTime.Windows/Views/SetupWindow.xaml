@@ -1,0 +1,63 @@
+<Window x:Class="ChildScreenTime.Windows.Views.SetupWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Set up Child Screen Time" Width="590" Height="720"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+    <Grid Margin="34">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock Text="Child Screen Time" FontSize="31" FontWeight="SemiBold" />
+            <TextBlock Text="Transparent parental controls for this Windows account" FontSize="15" Foreground="{StaticResource MutedBrush}" Margin="0,6,0,20" />
+            <Border Background="#E8EEFF" CornerRadius="8" Padding="14">
+                <TextBlock TextWrapping="Wrap" Foreground="#23429F"
+                           Text="This app records the foreground application's name and active duration. It does not record window titles, keystrokes, screenshots, messages, microphone audio, or camera video." />
+            </Border>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,22,0,12">
+            <StackPanel>
+                <TextBlock Text="Parent password" FontWeight="SemiBold" />
+                <PasswordBox x:Name="ParentPassword" AutomationProperties.Name="Parent password" />
+                <TextBlock Text="Confirm password" FontWeight="SemiBold" />
+                <PasswordBox x:Name="ConfirmPassword" AutomationProperties.Name="Confirm parent password" />
+                <TextBlock Text="Use at least 12 characters and a password manager where possible." Foreground="{StaticResource MutedBrush}" Margin="0,-4,0,14" />
+
+                <TextBlock Text="Daily screen-time limit (minutes)" FontWeight="SemiBold" />
+                <TextBox x:Name="DailyLimit" Text="120" AutomationProperties.Name="Daily screen-time limit in minutes" />
+
+                <CheckBox x:Name="BedtimeEnabled" IsChecked="True" Content="Enable bedtime schedule" Margin="0,8,0,10" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="18" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Bedtime starts" FontWeight="SemiBold" />
+                        <TextBox x:Name="BedtimeStart" Text="21:00" AutomationProperties.Name="Bedtime start" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Bedtime ends" FontWeight="SemiBold" />
+                        <TextBox x:Name="BedtimeEnd" Text="07:00" AutomationProperties.Name="Bedtime end" />
+                    </StackPanel>
+                </Grid>
+
+                <TextBlock x:Name="ErrorText" Foreground="#B42318" TextWrapping="Wrap" Margin="0,8,0,0" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="The child should use a standard Windows account." VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" />
+            <Button Grid.Column="1" Content="Finish secure setup" Click="CompleteSetup_Click" Background="{StaticResource BrandBrush}" Foreground="White" FontWeight="SemiBold" />
+        </Grid>
+    </Grid>
+</Window>
