@@ -1,0 +1,44 @@
+services:
+  database:
+    image: postgres:17.11-alpine3.24
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - remote-database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [backend]
+
+  dashboard:
+    build:
+      context: ..
+      dockerfile: pc/src/ChildScreenTime.Remote/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      CST_ConnectionStrings__RemoteDatabase: ${CST_ConnectionStrings__RemoteDatabase}
+      CST_Remote__RegistrationInviteCode: ${CST_Remote__RegistrationInviteCode}
+      CST_Remote__DataProtectionKeyPath: ${CST_Remote__DataProtectionKeyPath}
+      CST_Remote__ApplyMigrationsOnStartup: ${CST_Remote__ApplyMigrationsOnStartup:-false}
+      CST_Remote__DataRetentionDays: ${CST_Remote__DataRetentionDays:-90}
+      CST_AllowedHosts: ${CST_AllowedHosts}
+    volumes:
+      - remote-keys:/var/lib/child-screen-time/keys
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks: [backend]
+
+networks:
+  backend:
+
+volumes:
+  remote-database:
+  remote-keys:

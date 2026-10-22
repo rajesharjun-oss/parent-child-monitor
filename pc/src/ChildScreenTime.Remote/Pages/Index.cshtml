@@ -1,0 +1,19 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+<section class="hero">
+    <p class="eyebrow">Secure family dashboard</p>
+    <h1>See healthy screen-time patterns from your own device.</h1>
+    <p>Pair a child’s Windows PC once, then review application-level usage summaries from this protected dashboard.</p>
+    <div class="actions">
+        <a class="button primary" asp-page="/Dashboard/Index">Open dashboard</a>
+        <a class="button secondary" asp-page="/Account/Register">Create parent account</a>
+    </div>
+</section>
+<section class="feature-grid" aria-label="Privacy protections">
+    <article><h2>Minimal collection</h2><p>Only application names, dates, active time, and last-seen timestamps are synchronized.</p></article>
+    <article><h2>Revocable pairing</h2><p>Each PC receives its own random device credential. Revoke one device without affecting another.</p></article>
+    <article><h2>Private by design</h2><p>Every dashboard query is restricted to devices owned by the signed-in parent account.</p></article>
+</section>

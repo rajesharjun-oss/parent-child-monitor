@@ -1,0 +1,10 @@
+.git
+.github
+.idea
+.config
+**/bin
+**/obj
+pc/artifacts
+pc/**/.env
+pc/**/keys
+outputs

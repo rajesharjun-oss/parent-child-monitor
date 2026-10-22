@@ -12,3 +12,5 @@ pc/**/bin/
 pc/**/obj/
 pc/artifacts/
 pc/.dotnet-home/
+pc/**/.env
+pc/**/keys/

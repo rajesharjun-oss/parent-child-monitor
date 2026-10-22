@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.Net.Http;
 using System.Windows;
 using ChildScreenTime.Core.Models;
 using ChildScreenTime.Core.Services;
@@ -21,6 +22,9 @@ public partial class ParentWindow : Window
         LoadSettings();
         LoadActivity();
         LoadAudit();
+        LoadRemoteSettings();
+        services.RemoteSync.StatusChanged += RemoteSync_StatusChanged;
+        Closed += (_, _) => services.RemoteSync.StatusChanged -= RemoteSync_StatusChanged;
     }
 
     private void LoadSettings()
@@ -71,6 +75,78 @@ public partial class ParentWindow : Window
                 item.EventType.Replace('_', ' '),
                 item.Summary))
             .ToList();
+    }
+
+    private void LoadRemoteSettings()
+    {
+        var remote = services.Settings.GetSnapshot().RemoteSync;
+        RemoteServerUrl.Text = remote.ServerBaseUrl;
+        RemoteDeviceName.Text = string.IsNullOrWhiteSpace(remote.DeviceName) ? Environment.MachineName : remote.DeviceName;
+        UpdateRemoteStatus(services.RemoteSync.Status);
+    }
+
+    private void RemoteSync_StatusChanged(object? sender, RemoteSyncStatus status) =>
+        Dispatcher.Invoke(() => UpdateRemoteStatus(status));
+
+    private void UpdateRemoteStatus(RemoteSyncStatus status)
+    {
+        RemoteStatusText.Text = status.Message;
+        RemoteStatusText.Foreground = status.IsPaired ? System.Windows.Media.Brushes.SeaGreen : System.Windows.Media.Brushes.DimGray;
+        RemoteLastSyncText.Text = status.LastSuccessUtc is null
+            ? "No successful remote synchronization yet."
+            : $"Last successful sync: {status.LastSuccessUtc.Value.ToLocalTime():g}";
+        PairRemoteButton.IsEnabled = !status.IsSyncing;
+        SyncNowButton.IsEnabled = status.IsPaired && !status.IsSyncing;
+        DisconnectRemoteButton.IsEnabled = status.IsPaired && !status.IsSyncing;
+        RemoteServerUrl.IsEnabled = !status.IsPaired;
+        RemoteDeviceName.IsEnabled = !status.IsPaired;
+        RemotePairingCode.IsEnabled = !status.IsPaired;
+    }
+
+    private async void PairRemote_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            PairRemoteButton.IsEnabled = false;
+            RemoteStatusText.Text = "Pairing securely...";
+            await services.RemoteSync.PairAsync(RemoteServerUrl.Text, RemotePairingCode.Text, RemoteDeviceName.Text);
+            RemotePairingCode.Clear();
+            LoadAudit();
+            UpdateRemoteStatus(services.RemoteSync.Status);
+        }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException or HttpRequestException or InvalidDataException)
+        {
+            RemoteStatusText.Foreground = System.Windows.Media.Brushes.Firebrick;
+            RemoteStatusText.Text = exception.Message;
+            PairRemoteButton.IsEnabled = true;
+        }
+    }
+
+    private async void SyncNow_Click(object sender, RoutedEventArgs e)
+    {
+        await services.RemoteSync.SyncNowAsync();
+        UpdateRemoteStatus(services.RemoteSync.Status);
+    }
+
+    private void DisconnectRemote_Click(object sender, RoutedEventArgs e)
+    {
+        var confirmation = System.Windows.MessageBox.Show(
+            this,
+            "Disconnect this PC from remote viewing? Existing dashboard records remain until the parent deletes or revokes the device on the server.",
+            "Disconnect remote viewing",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning,
+            MessageBoxResult.No);
+        if (confirmation != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        services.RemoteSync.Unpair();
+        RemoteServerUrl.Clear();
+        RemotePairingCode.Clear();
+        LoadRemoteSettings();
+        LoadAudit();
     }
 
     private void AddRule_Click(object sender, RoutedEventArgs e)

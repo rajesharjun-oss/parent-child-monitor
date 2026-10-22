@@ -32,22 +32,32 @@ jobs:
       - name: Restore locked dependencies
         shell: pwsh
         run: |
-          dotnet restore pc/src/ChildScreenTime.Windows/ChildScreenTime.Windows.csproj --runtime win-x64 --locked-mode --configfile pc/NuGet.config
-          dotnet restore pc/src/ChildScreenTime.Service/ChildScreenTime.Service.csproj --runtime win-x64 --locked-mode --configfile pc/NuGet.config
+          dotnet restore pc/src/ChildScreenTime.Windows/ChildScreenTime.Windows.csproj --locked-mode --configfile pc/NuGet.config
+          dotnet restore pc/src/ChildScreenTime.Service/ChildScreenTime.Service.csproj --locked-mode --configfile pc/NuGet.config
           dotnet restore pc/tests/ChildScreenTime.Core.Tests/ChildScreenTime.Core.Tests.csproj --locked-mode --configfile pc/NuGet.config
           dotnet restore pc/tests/ChildScreenTime.Windows.Tests/ChildScreenTime.Windows.Tests.csproj --locked-mode --configfile pc/NuGet.config
+          dotnet restore pc/src/ChildScreenTime.Remote/ChildScreenTime.Remote.csproj --locked-mode --configfile pc/NuGet.config
+          dotnet restore pc/tests/ChildScreenTime.Remote.Tests/ChildScreenTime.Remote.Tests.csproj --locked-mode --configfile pc/NuGet.config
+
+      - name: Audit dependencies
+        shell: pwsh
+        run: |
+          dotnet list pc/src/ChildScreenTime.Windows/ChildScreenTime.Windows.csproj package --vulnerable --include-transitive
+          dotnet list pc/src/ChildScreenTime.Remote/ChildScreenTime.Remote.csproj package --vulnerable --include-transitive
 
       - name: Build
         shell: pwsh
         run: |
           dotnet build pc/src/ChildScreenTime.Windows/ChildScreenTime.Windows.csproj --configuration Release --no-restore
           dotnet build pc/src/ChildScreenTime.Service/ChildScreenTime.Service.csproj --configuration Release --no-restore
+          dotnet build pc/src/ChildScreenTime.Remote/ChildScreenTime.Remote.csproj --configuration Release --no-restore
 
       - name: Test
         shell: pwsh
         run: |
           dotnet test pc/tests/ChildScreenTime.Core.Tests/ChildScreenTime.Core.Tests.csproj --configuration Release --no-restore
           dotnet test pc/tests/ChildScreenTime.Windows.Tests/ChildScreenTime.Windows.Tests.csproj --configuration Release --no-restore
+          dotnet test pc/tests/ChildScreenTime.Remote.Tests/ChildScreenTime.Remote.Tests.csproj --configuration Release --no-restore
 
       - name: Publish self-contained application and service
         shell: pwsh
@@ -55,10 +65,18 @@ jobs:
           dotnet publish pc/src/ChildScreenTime.Windows/ChildScreenTime.Windows.csproj --configuration Release --runtime win-x64 --self-contained true --no-restore -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false --output pc/artifacts/publish
           dotnet publish pc/src/ChildScreenTime.Service/ChildScreenTime.Service.csproj --configuration Release --runtime win-x64 --self-contained true --no-restore -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false --output pc/artifacts/service-publish
           Copy-Item -LiteralPath pc/artifacts/service-publish/ChildScreenTime.Service.exe -Destination pc/artifacts/publish -Force
+          dotnet publish pc/src/ChildScreenTime.Remote/ChildScreenTime.Remote.csproj --configuration Release --no-restore --output pc/artifacts/remote-publish
 
       - name: Upload application
         uses: actions/upload-artifact@v4
         with:
           name: child-screen-time-windows
           path: pc/artifacts/publish
+          if-no-files-found: error
+
+      - name: Upload remote dashboard
+        uses: actions/upload-artifact@v4
+        with:
+          name: child-screen-time-remote-dashboard
+          path: pc/artifacts/remote-publish
           if-no-files-found: error

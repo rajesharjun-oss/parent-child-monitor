@@ -10,35 +10,51 @@ $publish = Join-Path $artifacts 'publish'
 $installerOutput = Join-Path $artifacts 'installer'
 $appProject = Join-Path $root 'src\ChildScreenTime.Windows\ChildScreenTime.Windows.csproj'
 $serviceProject = Join-Path $root 'src\ChildScreenTime.Service\ChildScreenTime.Service.csproj'
+$remoteProject = Join-Path $root 'src\ChildScreenTime.Remote\ChildScreenTime.Remote.csproj'
 $servicePublish = Join-Path $artifacts 'service-publish'
 $testsProject = Join-Path $root 'tests\ChildScreenTime.Core.Tests\ChildScreenTime.Core.Tests.csproj'
 $windowsTestsProject = Join-Path $root 'tests\ChildScreenTime.Windows.Tests\ChildScreenTime.Windows.Tests.csproj'
+$remoteTestsProject = Join-Path $root 'tests\ChildScreenTime.Remote.Tests\ChildScreenTime.Remote.Tests.csproj'
+$remotePublish = Join-Path $artifacts 'remote-publish'
+$dotnetCommand = Get-Command dotnet -ErrorAction SilentlyContinue
+$dotnet = if ($dotnetCommand) { $dotnetCommand.Source } else { Join-Path $env:ProgramFiles 'dotnet\dotnet.exe' }
+if (-not (Test-Path -LiteralPath $dotnet)) { throw '.NET 10 SDK was not found.' }
 
-dotnet restore $appProject --runtime win-x64 --configfile (Join-Path $root 'NuGet.config')
+& $dotnet restore $appProject --configfile (Join-Path $root 'NuGet.config')
 if ($LASTEXITCODE -ne 0) { throw 'Application restore failed.' }
-dotnet restore $serviceProject --runtime win-x64 --configfile (Join-Path $root 'NuGet.config')
+& $dotnet restore $serviceProject --configfile (Join-Path $root 'NuGet.config')
 if ($LASTEXITCODE -ne 0) { throw 'Service restore failed.' }
-dotnet restore $testsProject --configfile (Join-Path $root 'NuGet.config')
+& $dotnet restore $testsProject --configfile (Join-Path $root 'NuGet.config')
 if ($LASTEXITCODE -ne 0) { throw 'Test restore failed.' }
-dotnet restore $windowsTestsProject --configfile (Join-Path $root 'NuGet.config')
+& $dotnet restore $windowsTestsProject --configfile (Join-Path $root 'NuGet.config')
 if ($LASTEXITCODE -ne 0) { throw 'Windows test restore failed.' }
-dotnet build $appProject --configuration Release --no-restore
+& $dotnet restore $remoteProject --configfile (Join-Path $root 'NuGet.config')
+if ($LASTEXITCODE -ne 0) { throw 'Remote dashboard restore failed.' }
+& $dotnet restore $remoteTestsProject --configfile (Join-Path $root 'NuGet.config')
+if ($LASTEXITCODE -ne 0) { throw 'Remote dashboard test restore failed.' }
+& $dotnet build $appProject --configuration Release --no-restore
 if ($LASTEXITCODE -ne 0) { throw 'Application build failed.' }
-dotnet build $serviceProject --configuration Release --no-restore
+& $dotnet build $serviceProject --configuration Release --no-restore
 if ($LASTEXITCODE -ne 0) { throw 'Service build failed.' }
-dotnet test $testsProject --configuration Release --no-restore
+& $dotnet build $remoteProject --configuration Release --no-restore
+if ($LASTEXITCODE -ne 0) { throw 'Remote dashboard build failed.' }
+& $dotnet test $testsProject --configuration Release --no-restore
 if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
-dotnet test $windowsTestsProject --configuration Release --no-restore
+& $dotnet test $windowsTestsProject --configuration Release --no-restore
 if ($LASTEXITCODE -ne 0) { throw 'Windows tests failed.' }
-dotnet publish $appProject --configuration Release --runtime win-x64 --self-contained true `
+& $dotnet test $remoteTestsProject --configuration Release --no-restore
+if ($LASTEXITCODE -ne 0) { throw 'Remote dashboard tests failed.' }
+& $dotnet publish $appProject --configuration Release --runtime win-x64 --self-contained true `
     -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
     -p:DebugType=None -p:DebugSymbols=false --output $publish
 if ($LASTEXITCODE -ne 0) { throw 'Application publish failed.' }
-dotnet publish $serviceProject --configuration Release --runtime win-x64 --self-contained true `
+& $dotnet publish $serviceProject --configuration Release --runtime win-x64 --self-contained true `
     -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
     -p:DebugType=None -p:DebugSymbols=false --output $servicePublish
 if ($LASTEXITCODE -ne 0) { throw 'Service publish failed.' }
 Copy-Item -LiteralPath (Join-Path $servicePublish 'ChildScreenTime.Service.exe') -Destination $publish -Force
+& $dotnet publish $remoteProject --configuration Release --no-restore --output $remotePublish
+if ($LASTEXITCODE -ne 0) { throw 'Remote dashboard publish failed.' }
 
 if (-not $SkipInstaller) {
     $isccCandidates = @(
@@ -57,6 +73,7 @@ if (-not $SkipInstaller) {
 }
 
 Write-Host "Verified application output: $publish"
+Write-Host "Remote dashboard output: $remotePublish"
 if (-not $SkipInstaller) {
     Write-Host "Installer output: $installerOutput"
 }

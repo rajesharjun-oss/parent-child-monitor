@@ -1,0 +1,24 @@
+@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "Create parent account";
+}
+<section class="auth-card">
+    <p class="eyebrow">Protected registration</p>
+    <h1>Create parent account</h1>
+    <p>Registration requires the private deployment invite code configured by the server owner.</p>
+    <form method="post">
+        <div asp-validation-summary="ModelOnly" class="validation" role="alert"></div>
+        <label asp-for="Input.DisplayName"></label><input asp-for="Input.DisplayName" autocomplete="name" />
+        <span asp-validation-for="Input.DisplayName" class="validation"></span>
+        <label asp-for="Input.Email"></label><input asp-for="Input.Email" autocomplete="email" />
+        <span asp-validation-for="Input.Email" class="validation"></span>
+        <label asp-for="Input.Password"></label><input asp-for="Input.Password" autocomplete="new-password" />
+        <span asp-validation-for="Input.Password" class="validation"></span>
+        <label asp-for="Input.ConfirmPassword"></label><input asp-for="Input.ConfirmPassword" autocomplete="new-password" />
+        <span asp-validation-for="Input.ConfirmPassword" class="validation"></span>
+        <label asp-for="Input.InviteCode"></label><input asp-for="Input.InviteCode" autocomplete="off" />
+        <span asp-validation-for="Input.InviteCode" class="validation"></span>
+        <button class="button primary" type="submit">Create account</button>
+    </form>
+</section>

@@ -2,7 +2,7 @@ namespace ChildScreenTime.Core.Models;
 
 public sealed class AppSettings
 {
-    public const int CurrentSchemaVersion = 1;
+    public const int CurrentSchemaVersion = 2;
 
     public int SchemaVersion { get; set; } = CurrentSchemaVersion;
     public bool IsConfigured { get; set; }
@@ -17,4 +17,5 @@ public sealed class AppSettings
     public DateTimeOffset? AuthenticationLockedUntilUtc { get; set; }
     public DateTimeOffset? TemporaryOverrideUntilUtc { get; set; }
     public List<AppRule> AppRules { get; set; } = [];
+    public RemoteSyncSettings RemoteSync { get; set; } = new();
 }

@@ -12,6 +12,7 @@ public sealed class AppServices
         Usage = new UsageRepository(protectedStore, Paths);
         Audit = new AuditRepository(protectedStore, Paths);
         Authentication = new AuthenticationService(Settings, Audit);
+        RemoteSync = new RemoteSyncService(Settings, Usage, Audit);
         Monitoring = new MonitoringCoordinator(
             Settings,
             Usage,
@@ -24,5 +25,6 @@ public sealed class AppServices
     public UsageRepository Usage { get; }
     public AuditRepository Audit { get; }
     public AuthenticationService Authentication { get; }
+    public RemoteSyncService RemoteSync { get; }
     public MonitoringCoordinator Monitoring { get; }
 }

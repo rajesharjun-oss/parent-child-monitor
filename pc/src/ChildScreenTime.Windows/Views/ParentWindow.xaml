@@ -113,6 +113,37 @@
                 </Grid>
             </TabItem>
 
+            <TabItem Header="Remote viewing">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="20" Width="640" HorizontalAlignment="Left">
+                        <TextBlock Text="Secure parent dashboard" FontSize="22" FontWeight="SemiBold" />
+                        <TextBlock Margin="0,6,0,18" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap"
+                                   Text="Pair this PC with your hosted parent dashboard. Only application names, dates, active durations, and last-seen times are uploaded. Screenshots, keystrokes, messages, files, and passwords are never collected." />
+
+                        <TextBlock Text="Dashboard server URL" FontWeight="SemiBold" />
+                        <TextBox x:Name="RemoteServerUrl" AutomationProperties.Name="Remote dashboard server URL" ToolTip="For example, https://monitor.example.com" />
+                        <TextBlock Text="Device name shown to the parent" FontWeight="SemiBold" />
+                        <TextBox x:Name="RemoteDeviceName" AutomationProperties.Name="Remote device name" />
+                        <TextBlock Text="One-time pairing code" FontWeight="SemiBold" />
+                        <TextBox x:Name="RemotePairingCode" AutomationProperties.Name="One-time pairing code" />
+
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button x:Name="PairRemoteButton" Content="Pair this PC" Click="PairRemote_Click" Background="{StaticResource BrandBrush}" Foreground="White" />
+                            <Button x:Name="SyncNowButton" Content="Sync now" Click="SyncNow_Click" />
+                            <Button x:Name="DisconnectRemoteButton" Content="Disconnect this PC" Click="DisconnectRemote_Click" Foreground="#B42318" />
+                        </StackPanel>
+
+                        <Border Background="#EEF4FF" CornerRadius="8" Padding="14" Margin="0,18,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Connection status" FontWeight="SemiBold" />
+                                <TextBlock x:Name="RemoteStatusText" Margin="0,5,0,0" TextWrapping="Wrap" />
+                                <TextBlock x:Name="RemoteLastSyncText" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
             <TabItem Header="Security &amp; audit">
                 <Grid Margin="14">
                     <Grid.ColumnDefinitions>

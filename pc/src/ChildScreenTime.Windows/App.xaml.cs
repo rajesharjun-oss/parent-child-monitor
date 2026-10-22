@@ -55,6 +55,7 @@ public partial class App : System.Windows.Application, IDisposable
             var mainWindow = new MainWindow(services, serviceManaged);
             MainWindow = mainWindow;
             services.Monitoring.Start();
+            services.RemoteSync.Start();
 
             var backgroundStart = e.Args.Any(argument => string.Equals(argument, "--background", StringComparison.OrdinalIgnoreCase));
             if (!backgroundStart)
@@ -78,6 +79,7 @@ public partial class App : System.Windows.Application, IDisposable
         if (services is not null)
         {
             services.Monitoring.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            services.RemoteSync.DisposeAsync().AsTask().GetAwaiter().GetResult();
         }
 
         Dispose();

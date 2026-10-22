@@ -1,0 +1,21 @@
+@page
+@model LoginModel
+@{
+    ViewData["Title"] = "Parent sign in";
+}
+<section class="auth-card">
+    <p class="eyebrow">Parent access</p>
+    <h1>Sign in</h1>
+    <form method="post">
+        <div asp-validation-summary="ModelOnly" class="validation" role="alert"></div>
+        <input type="hidden" asp-for="ReturnUrl" />
+        <label asp-for="Input.Email"></label>
+        <input asp-for="Input.Email" autocomplete="username" />
+        <span asp-validation-for="Input.Email" class="validation"></span>
+        <label asp-for="Input.Password"></label>
+        <input asp-for="Input.Password" autocomplete="current-password" />
+        <span asp-validation-for="Input.Password" class="validation"></span>
+        <label class="checkbox"><input asp-for="Input.RememberMe" /> Remember this device</label>
+        <button class="button primary" type="submit">Sign in securely</button>
+    </form>
+</section>

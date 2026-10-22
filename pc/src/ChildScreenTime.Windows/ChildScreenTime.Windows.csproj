@@ -14,5 +14,6 @@
   <ItemGroup>
     <ProjectReference Include="../ChildScreenTime.Core/ChildScreenTime.Core.csproj" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
+    <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="10.0.13" PrivateAssets="all" />
   </ItemGroup>
 </Project>

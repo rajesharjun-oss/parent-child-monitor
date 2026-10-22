@@ -12,7 +12,7 @@ A powerful, open source parental control application for Android that provides u
 > original Git history is retained for attribution; the Windows PC implementation
 > in [`pc/`](pc/) is maintained in this repository.
 
-> **Windows PC version:** A separate Windows 10/11 application with a boot-time Windows service, automatic agent recovery, installer, protected parent dashboard, application-usage summaries, limits, schedules, and privacy controls is available under [`pc/`](pc/README.md).
+> **Windows PC version:** A Windows 10/11 application with a boot-time service, automatic agent recovery, installer, limits, schedules, privacy controls, and an optional secure remote parent dashboard is available under [`pc/`](pc/README.md).
 
 ## 🌟 Features
 

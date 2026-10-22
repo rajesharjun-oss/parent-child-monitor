@@ -1,0 +1,93 @@
+@page
+@model DashboardModel
+@{
+    ViewData["Title"] = "Parent dashboard";
+}
+<header class="dashboard-heading">
+    <div><p class="eyebrow">Parent dashboard</p><h1>Screen-time overview</h1><p>Usage summaries from paired Windows PCs.</p></div>
+    <a class="button primary" href="#pairing-panel">Pair a PC</a>
+</header>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="notice" role="status">@Model.StatusMessage</div>
+}
+@if (!string.IsNullOrWhiteSpace(Model.NewPairingCode))
+{
+    <section class="pairing-code" aria-live="polite">
+        <h2>One-time pairing code</h2>
+        <code>@Model.NewPairingCode</code>
+        <p>On the child PC, open Parent controls → Remote viewing. Enter this dashboard’s HTTPS URL and the code above. It expires at @Model.PairingCodeExpiresLocal.</p>
+    </section>
+}
+
+<section class="metrics" aria-label="Summary">
+    <article><span>Paired devices</span><strong>@Model.Devices.Count</strong></article>
+    <article><span>Active today</span><strong>@Model.TodayMinutes min</strong></article>
+    <article><span>Applications this week</span><strong>@Model.WeeklyUsage.Count</strong></article>
+</section>
+
+<section>
+    <h2>Devices</h2>
+    @if (Model.Devices.Count == 0)
+    {
+        <div class="empty"><h3>No PCs paired yet</h3><p>Create a one-time code, then enter it in the Windows app.</p></div>
+    }
+    else
+    {
+        <div class="device-grid">
+        @foreach (var device in Model.Devices)
+        {
+            <article class="device-card">
+                <div><h3>@device.Name</h3><p>Paired @device.PairedLocal.ToString("d") · @(device.Revoked ? "Revoked" : device.LastSeenLocal is null ? "Waiting for first sync" : $"Last sync {device.LastSeenLocal.Value:g}")</p></div>
+                @if (!device.Revoked)
+                {
+                    <form method="post" asp-page-handler="Revoke">
+                        <input type="hidden" name="deviceId" value="@device.Id" />
+                        <label for="revoke-password-@device.Id">Password to revoke</label>
+                        <input id="revoke-password-@device.Id" name="currentPassword" type="password" autocomplete="current-password" required minlength="12" maxlength="128" />
+                        <button class="button danger" type="submit">Revoke device</button>
+                    </form>
+                }
+                <form method="post" asp-page-handler="DeleteUsage">
+                    <input type="hidden" name="deviceId" value="@device.Id" />
+                    <label for="delete-password-@device.Id">Password to delete synchronized history</label>
+                    <input id="delete-password-@device.Id" name="currentPassword" type="password" autocomplete="current-password" required minlength="12" maxlength="128" />
+                    <label class="checkbox"><input name="confirmed" type="checkbox" value="true" required /> I understand this permanently deletes the remote history and revokes this device.</label>
+                    <button class="button danger" type="submit">Delete history and revoke</button>
+                </form>
+            </article>
+        }
+        </div>
+    }
+</section>
+
+<section>
+    <h2>Last seven days</h2>
+    @if (Model.WeeklyUsage.Count == 0)
+    {
+        <div class="empty"><p>No synchronized usage has arrived yet.</p></div>
+    }
+    else
+    {
+        <div class="table-wrap"><table>
+            <thead><tr><th>Application</th><th>Device</th><th>Active time</th><th>Last seen</th></tr></thead>
+            <tbody>
+            @foreach (var item in Model.WeeklyUsage)
+            {
+                <tr><td>@item.Application</td><td>@item.Device</td><td>@item.Minutes min</td><td>@item.LastSeenLocal.ToString("g")</td></tr>
+            }
+            </tbody>
+        </table></div>
+    }
+</section>
+
+<section class="pair-panel" id="pairing-panel">
+    <form method="post" asp-page-handler="CreatePairingCode">
+        <h2>Create pairing code</h2>
+        <p>For security, confirm your parent password. The code works once and expires quickly.</p>
+        <label for="pair-password">Current password</label>
+        <input id="pair-password" name="currentPassword" type="password" autocomplete="current-password" required minlength="12" maxlength="128" />
+        <div class="actions"><button class="button primary" type="submit">Create code</button></div>
+    </form>
+</section>

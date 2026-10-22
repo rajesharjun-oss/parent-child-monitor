@@ -17,6 +17,9 @@ It deliberately does **not** collect window titles, browser URLs, keystrokes, sc
 - Parent re-authentication for password changes, history deletion, and agent shutdown
 - Automatic boot-time Windows service with active-session launch and recovery
 - Automatic relaunch within approximately five seconds if the monitoring agent is closed
+- Optional HTTPS remote synchronization to an authenticated parent web dashboard
+- One-time device pairing, revocable per-device credentials, offline retry, and idempotent uploads
+- Parent web accounts with BCrypt password hashing, lockout, authenticator-app MFA, recovery codes, and strict tenant isolation
 
 ## Requirements
 
@@ -36,7 +39,7 @@ cd pc
 .\build.ps1 -SkipInstaller
 ```
 
-The script restores pinned packages, builds with warnings treated as errors, runs the rules-engine tests, and publishes a self-contained `win-x64` application to `pc/artifacts/publish`.
+The script restores pinned packages, builds with warnings treated as errors, runs the local and remote authorization tests, publishes a self-contained `win-x64` application to `pc/artifacts/publish`, and publishes the remote server to `pc/artifacts/remote-publish`.
 
 To build the installer, install Inno Setup 6 and run:
 
@@ -55,6 +58,8 @@ The installer is written to `pc/artifacts/installer/ChildScreenTime-Setup.exe`.
 5. Confirm the `ChildScreenTimeAgent` Windows service is running and the tray icon appears after Windows sign-in.
 6. Close the agent after entering the parent password and confirm the service relaunches it within approximately five seconds.
 
+Remote viewing is optional. Deploy the parent dashboard by following [REMOTE_DEPLOYMENT.md](REMOTE_DEPLOYMENT.md), create a one-time code in the web dashboard, then enter the HTTPS URL and code under **Parent controls → Remote viewing** on the child PC.
+
 Before uninstalling, use **Delete all activity history** in Parent controls if the usage history should be removed. Uninstalling removes the application but deliberately preserves protected configuration and audit data for safe repair or reinstall. A parent can remove the remaining `%LOCALAPPDATA%\ChildScreenTime` directory after uninstalling if the device is being decommissioned.
 
 ## Data and security model
@@ -63,7 +68,8 @@ Before uninstalling, use **Delete all activity history** in Parent controls if t
 - Parent passwords are BCrypt hashes with work factor 12. Plaintext passwords are never stored or logged.
 - Authentication failures are recorded without recording attempted passwords.
 - CSV exports are intentionally plaintext because the parent chooses their destination; they should be stored securely.
-- There is no network listener, cloud synchronization, hidden mode, remote command channel, or telemetry.
+- Remote synchronization is disabled until a parent deliberately pairs the PC. The Windows agent opens outbound HTTPS connections only; it does not expose a network listener or remote command channel.
+- The remote server receives minimized application-usage summaries. Device credentials are random, revocable, stored only as hashes on the server, and protected with Windows DPAPI on the child PC.
 - The `ChildScreenTimeAgent` service runs as LocalSystem from boot. It does not inspect activity in session 0; it launches the visible agent in the currently active Windows desktop session, where foreground-window monitoring is technically possible.
 
 ## Current limitations
@@ -73,4 +79,5 @@ Before uninstalling, use **Delete all activity history** in Parent controls if t
 - Settings and activity data remain scoped to the Windows account configured during installation. Shared multi-account policy storage requires a future service-owned data channel; test this release with one dedicated standard child account.
 - Application rules use process names. Digitally signed publisher policies and browser category filtering are not included in this local-first release.
 - The generated installer is unsigned until an Authenticode certificate is supplied.
+- Remote viewing requires a separately deployed HTTPS dashboard and PostgreSQL database. The repository does not include hosting, DNS, TLS certificates, email delivery, or managed backups.
 - Sleep, shutdown, Windows security screens, and operating-system updates remain available and are not intercepted.

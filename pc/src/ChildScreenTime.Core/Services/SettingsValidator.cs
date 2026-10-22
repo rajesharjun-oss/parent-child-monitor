@@ -62,6 +62,8 @@ public static partial class SettingsValidator
             }
         }
 
+        errors.AddRange(RemoteEndpointValidator.Validate(settings.RemoteSync));
+
         return errors;
     }
 

@@ -15,6 +15,12 @@ public sealed class SettingsRepository
         this.store = store;
         path = paths.SettingsFile;
         settings = store.Load(path, () => new AppSettings());
+        if (settings.SchemaVersion == 1)
+        {
+            settings.SchemaVersion = AppSettings.CurrentSchemaVersion;
+            settings.RemoteSync ??= new RemoteSyncSettings();
+            store.Save(path, settings);
+        }
         EnsureValid(settings);
     }
 
@@ -63,6 +69,14 @@ public sealed class SettingsRepository
         FailedAuthenticationCount = source.FailedAuthenticationCount,
         AuthenticationLockedUntilUtc = source.AuthenticationLockedUntilUtc,
         TemporaryOverrideUntilUtc = source.TemporaryOverrideUntilUtc,
+        RemoteSync = new RemoteSyncSettings
+        {
+            ServerBaseUrl = source.RemoteSync.ServerBaseUrl,
+            DeviceId = source.RemoteSync.DeviceId,
+            DeviceToken = source.RemoteSync.DeviceToken,
+            DeviceName = source.RemoteSync.DeviceName,
+            LastSuccessfulSyncUtc = source.RemoteSync.LastSuccessfulSyncUtc
+        },
         AppRules = source.AppRules.Select(rule => new AppRule
         {
             ProcessName = rule.ProcessName,

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] · Parent-Child Monitor</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" asp-page="/Index">Parent-Child Monitor</a>
+        <nav aria-label="Primary navigation">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a asp-page="/Dashboard/Index">Dashboard</a>
+                <a asp-page="/Account/Security">Security</a>
+                <form method="post" asp-page="/Account/Logout"><button class="link-button" type="submit">Sign out</button></form>
+            }
+            else
+            {
+                <a asp-page="/Account/Login">Sign in</a>
+            }
+        </nav>
+    </header>
+    <main class="page-shell">@RenderBody()</main>
+    <footer>Privacy-first usage summaries. No screenshots, keystrokes, or message content.</footer>
+</body>
+</html>
