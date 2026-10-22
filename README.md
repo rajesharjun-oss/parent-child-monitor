@@ -7,6 +7,11 @@
 
 A powerful, open source parental control application for Android that provides uncompromising screen time management and digital wellness tools for families.
 
+> **Project lineage:** This private repository is a derivative of the original
+> [`childscreentime/cst`](https://github.com/childscreentime/cst) project. The
+> original Git history is retained for attribution; the Windows PC implementation
+> in [`pc/`](pc/) is maintained in this repository.
+
 > **Windows PC version:** A separate Windows 10/11 application with a boot-time Windows service, automatic agent recovery, installer, protected parent dashboard, application-usage summaries, limits, schedules, and privacy controls is available under [`pc/`](pc/README.md).
 
 ## 🌟 Features
@@ -37,8 +42,8 @@ A powerful, open source parental control application for Android that provides u
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/childscreentime/cst.git
-   cd cst
+   git clone https://github.com/rajesharjun-oss/parent-child-monitor.git
+   cd parent-child-monitor
    ```
 
 2. **Build the project**
@@ -286,7 +291,9 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for deta
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+The upstream README describes the project as MIT-licensed, but the inherited
+repository does not currently include a `LICENSE` file. Confirm the upstream
+licensing terms before redistributing the Android or Windows code.
 
 ## 🙏 Acknowledgments
 
@@ -295,8 +302,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/childscreentime/cst/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/childscreentime/cst/discussions)
-- **Wiki**: [Project Wiki](https://github.com/childscreentime/cst/wiki)
+- **Issues**: [GitHub Issues](https://github.com/rajesharjun-oss/parent-child-monitor/issues)
+- **Upstream project**: [`childscreentime/cst`](https://github.com/childscreentime/cst)
 
 
