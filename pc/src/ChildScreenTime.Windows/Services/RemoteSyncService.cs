@@ -223,7 +223,7 @@ public sealed class RemoteSyncService : IAsyncDisposable
     {
         BaseAddress = baseUri,
         Timeout = TimeSpan.FromSeconds(20),
-        DefaultRequestHeaders = { UserAgent = { new ProductInfoHeaderValue("ChildScreenTime", "1.2") } }
+        DefaultRequestHeaders = { UserAgent = { new ProductInfoHeaderValue("ChildScreenTime", "1.3") } }
     };
 
     private static HttpClientHandler CreateHandler() => new()
