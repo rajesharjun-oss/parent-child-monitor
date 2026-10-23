@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
+#pragma warning disable CA1861 // Generated migration column arrays are intentionally local.
 
 namespace ChildScreenTime.Remote.Data.Migrations;
 
