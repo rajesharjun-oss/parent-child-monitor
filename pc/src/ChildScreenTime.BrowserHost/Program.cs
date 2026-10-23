@@ -156,7 +156,7 @@ internal sealed class ProtectedEventWriter
         try
         {
             var protectedBytes = Protect(clearBytes);
-            var fileName = $"{DateTimeOffset.UtcNow.UtcTicks:D19}-{Guid.NewGuid():N}.event";
+            var fileName = $"{DateTimeOffset.UtcNow.UtcDateTime.Ticks:D19}-{Guid.NewGuid():N}.event";
             var finalPath = Path.Combine(inboxDirectory, fileName);
             var temporaryPath = finalPath + ".tmp";
             File.WriteAllBytes(temporaryPath, protectedBytes);
