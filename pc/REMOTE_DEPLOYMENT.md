@@ -15,6 +15,21 @@ The child agent uploads only:
 
 It does not upload screenshots, arbitrary window titles, general browser URLs/history, keystrokes, messages, files, microphone or camera data, local parent passwords, or Windows credentials.
 
+## Render preview deployment
+
+The repository root includes a `render.yaml` Blueprint for a zero-cost preview deployment:
+
+- one Free Docker web service;
+- one Free Render Postgres database;
+- HTTPS on the generated `onrender.com` hostname;
+- private-only database networking;
+- automatic EF Core migrations; and
+- a health check at `/health`.
+
+Create a new Render Blueprint from this repository and provide a high-entropy value for `CST_Remote__RegistrationInviteCode` when prompted. The generated Render hostname is automatically applied to ASP.NET Core's allowed-host configuration.
+
+This preview profile is intended for evaluation, not long-term production. Free Render Postgres expires 30 days after creation and has no backups. Free web services use ephemeral local files, so a service restart can rotate the ASP.NET Core data-protection keys and sign existing browser sessions out. Parent accounts, paired devices, application usage, and YouTube summaries remain in PostgreSQL. Upgrade the database before the 30-day expiration and use a paid web service with persistent key storage before relying on the deployment for ongoing monitoring.
+
 ## Production prerequisites
 
 - A Linux host or container platform with Docker Compose

@@ -1,0 +1,54 @@
+services:
+  - type: web
+    name: child-screen-time-dashboard
+    runtime: docker
+    plan: free
+    dockerfilePath: ./pc/src/ChildScreenTime.Remote/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: ASPNETCORE_FORWARDEDHEADERS_ENABLED
+        value: "true"
+      - key: PGHOST
+        fromDatabase:
+          name: child-screen-time-db
+          property: host
+      - key: PGPORT
+        fromDatabase:
+          name: child-screen-time-db
+          property: port
+      - key: PGDATABASE
+        fromDatabase:
+          name: child-screen-time-db
+          property: database
+      - key: PGUSER
+        fromDatabase:
+          name: child-screen-time-db
+          property: user
+      - key: PGPASSWORD
+        fromDatabase:
+          name: child-screen-time-db
+          property: password
+      - key: CST_Remote__RegistrationInviteCode
+        sync: false
+      - key: CST_Remote__DataProtectionKeyPath
+        value: /var/lib/child-screen-time/keys
+      - key: CST_Remote__ApplyMigrationsOnStartup
+        value: "true"
+      - key: CST_Remote__DataRetentionDays
+        value: "90"
+      - key: CST_AllowedHosts
+        fromService:
+          type: web
+          name: child-screen-time-dashboard
+          envVarKey: RENDER_EXTERNAL_HOSTNAME
+
+databases:
+  - name: child-screen-time-db
+    plan: free
+    postgresMajorVersion: "17"
+    databaseName: child_screen_time
+    user: child_screen_time
+    ipAllowList: []
