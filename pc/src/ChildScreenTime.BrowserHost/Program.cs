@@ -106,7 +106,7 @@ internal static class Program
             var read = await stream.ReadAsync(buffer.AsMemory(offset, buffer.Length - offset)).ConfigureAwait(false);
             if (read == 0)
             {
-                return offset == 0;
+                return false;
             }
             offset += read;
         }
