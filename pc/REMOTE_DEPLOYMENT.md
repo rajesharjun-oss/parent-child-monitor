@@ -9,10 +9,11 @@ The child agent uploads only:
 - the paired device identifier and parent-assigned device name;
 - local calendar date;
 - executable/process name and friendly application name;
-- cumulative active seconds; and
+- cumulative active seconds;
+- optional YouTube video ID, title, channel name, cumulative active playback seconds, and last-seen UTC timestamp when the visible browser companion is installed; and
 - last-seen UTC timestamp.
 
-It does not upload screenshots, window titles, browser URLs, keystrokes, messages, files, microphone or camera data, local parent passwords, or Windows credentials.
+It does not upload screenshots, arbitrary window titles, general browser URLs/history, keystrokes, messages, files, microphone or camera data, local parent passwords, or Windows credentials.
 
 ## Production prerequisites
 
@@ -50,6 +51,7 @@ The initial EF Core migration runs when `CST_Remote__ApplyMigrationsOnStartup=tr
 3. On the child PC, open **Parent controls → Remote viewing**.
 4. Enter the dashboard HTTPS URL, a recognizable device name, and the pairing code.
 5. Select **Pair this PC**. The first usage upload runs immediately; later uploads run about every five minutes and retry after connectivity returns.
+6. If YouTube watch activity is required, install the optional visible Chrome/Edge companion on the child PC using `pc/browser-extension/README.md`.
 
 The dashboard can revoke a device at any time. Revocation is checked by the server on every upload. **Delete history and revoke** permanently removes that device's synchronized records and prevents further uploads. Disconnecting locally deletes the DPAPI-protected device credential from the PC but intentionally does not delete records already stored on the server. Clear the local history before pairing again if previously deleted local records must not be uploaded to a new device record.
 
