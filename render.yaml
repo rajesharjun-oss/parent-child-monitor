@@ -3,6 +3,7 @@ services:
     name: child-screen-time-dashboard
     runtime: docker
     plan: free
+    region: oregon
     dockerfilePath: ./pc/src/ChildScreenTime.Remote/Dockerfile
     dockerContext: .
     healthCheckPath: /health
@@ -13,23 +14,23 @@ services:
         value: "true"
       - key: PGHOST
         fromDatabase:
-          name: child-screen-time-db
+          name: child-screen-time-db-oregon
           property: host
       - key: PGPORT
         fromDatabase:
-          name: child-screen-time-db
+          name: child-screen-time-db-oregon
           property: port
       - key: PGDATABASE
         fromDatabase:
-          name: child-screen-time-db
+          name: child-screen-time-db-oregon
           property: database
       - key: PGUSER
         fromDatabase:
-          name: child-screen-time-db
+          name: child-screen-time-db-oregon
           property: user
       - key: PGPASSWORD
         fromDatabase:
-          name: child-screen-time-db
+          name: child-screen-time-db-oregon
           property: password
       - key: CST_Remote__RegistrationInviteCode
         sync: false
@@ -46,8 +47,9 @@ services:
           envVarKey: RENDER_EXTERNAL_HOSTNAME
 
 databases:
-  - name: child-screen-time-db
+  - name: child-screen-time-db-oregon
     plan: free
+    region: oregon
     postgresMajorVersion: "17"
     databaseName: child_screen_time
     user: child_screen_time
