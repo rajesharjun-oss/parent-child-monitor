@@ -8,6 +8,9 @@ RUN dotnet restore pc/src/ChildScreenTime.Remote/ChildScreenTime.Remote.csproj -
 RUN dotnet publish pc/src/ChildScreenTime.Remote/ChildScreenTime.Remote.csproj -c Release --no-restore -o /app /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0.13 AS runtime
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgssapi-krb5-2 \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=build /app .
 RUN mkdir -p /var/lib/child-screen-time/keys && chown -R $APP_UID:$APP_UID /var/lib/child-screen-time
