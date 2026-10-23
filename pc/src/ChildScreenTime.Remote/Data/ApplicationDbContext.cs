@@ -10,6 +10,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<ChildDevice> ChildDevices => Set<ChildDevice>();
     public DbSet<PairingCode> PairingCodes => Set<PairingCode>();
     public DbSet<UsageAggregate> UsageAggregates => Set<UsageAggregate>();
+    public DbSet<BrowserActivityAggregate> BrowserActivityAggregates => Set<BrowserActivityAggregate>();
     public DbSet<SecurityAuditEvent> SecurityAuditEvents => Set<SecurityAuditEvent>();
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -38,6 +39,15 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
             entity.HasIndex(value => new { value.DeviceId, value.LocalDate, value.ProcessName }).IsUnique();
             entity.HasIndex(value => new { value.DeviceId, value.LocalDate });
             entity.HasOne(value => value.Device).WithMany(value => value.Usage).HasForeignKey(value => value.DeviceId).OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<BrowserActivityAggregate>(entity =>
+        {
+            entity.Property(value => value.VideoId).HasMaxLength(11).IsFixedLength();
+            entity.Property(value => value.Title).HasMaxLength(200);
+            entity.Property(value => value.Channel).HasMaxLength(120);
+            entity.HasIndex(value => new { value.DeviceId, value.LocalDate, value.VideoId }).IsUnique();
+            entity.HasIndex(value => new { value.DeviceId, value.LocalDate });
+            entity.HasOne(value => value.Device).WithMany(value => value.BrowserActivity).HasForeignKey(value => value.DeviceId).OnDelete(DeleteBehavior.Cascade);
         });
         builder.Entity<SecurityAuditEvent>(entity =>
         {
