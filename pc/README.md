@@ -2,7 +2,7 @@
 
 Child Screen Time for Windows is a visible, local-first parental-control agent for Windows 10 and Windows 11. It records foreground application names and active duration, applies daily and per-application limits, enforces bedtime schedules, and provides password-protected parent controls.
 
-It deliberately does **not** collect window titles, browser URLs, keystrokes, screenshots, document names, messages, microphone audio, camera video, or credentials.
+The base Windows agent deliberately does **not** collect window titles, browser URLs, keystrokes, screenshots, document names, messages, microphone audio, camera video, or credentials. An optional, separately installed and visible Chrome/Edge companion can collect only YouTube video IDs, titles, channel names, and active playback seconds for the parent dashboard; it does not collect general browsing history.
 
 ## Features
 
@@ -18,6 +18,7 @@ It deliberately does **not** collect window titles, browser URLs, keystrokes, sc
 - Automatic boot-time Windows service with active-session launch and recovery
 - Automatic relaunch within approximately five seconds if the monitoring agent is closed
 - Optional HTTPS remote synchronization to an authenticated parent web dashboard
+- Optional visible Chrome/Edge companion for YouTube video title, channel, and active playback-time summaries
 - One-time device pairing, revocable per-device credentials, offline retry, and idempotent uploads
 - Parent web accounts with BCrypt password hashing, lockout, authenticator-app MFA, recovery codes, and strict tenant isolation
 
@@ -60,6 +61,8 @@ The installer is written to `pc/artifacts/installer/ChildScreenTime-Setup.exe`.
 
 Remote viewing is optional. Deploy the parent dashboard by following [REMOTE_DEPLOYMENT.md](REMOTE_DEPLOYMENT.md), create a one-time code in the web dashboard, then enter the HTTPS URL and code under **Parent controls → Remote viewing** on the child PC.
 
+YouTube watch activity is also optional. Install the visible browser companion using [browser-extension/README.md](browser-extension/README.md). Playback seconds are counted only while a YouTube video is playing in a visible tab; paused or hidden-tab time is not counted.
+
 Before uninstalling, use **Delete all activity history** in Parent controls if the usage history should be removed. Uninstalling removes the application but deliberately preserves protected configuration and audit data for safe repair or reinstall. A parent can remove the remaining `%LOCALAPPDATA%\ChildScreenTime` directory after uninstalling if the device is being decommissioned.
 
 ## Data and security model
@@ -69,7 +72,7 @@ Before uninstalling, use **Delete all activity history** in Parent controls if t
 - Authentication failures are recorded without recording attempted passwords.
 - CSV exports are intentionally plaintext because the parent chooses their destination; they should be stored securely.
 - Remote synchronization is disabled until a parent deliberately pairs the PC. The Windows agent opens outbound HTTPS connections only; it does not expose a network listener or remote command channel.
-- The remote server receives minimized application-usage summaries. Device credentials are random, revocable, stored only as hashes on the server, and protected with Windows DPAPI on the child PC.
+- The remote server receives minimized application-usage summaries and, only when the optional browser companion is installed, YouTube video/title/channel/playback summaries. Device credentials are random, revocable, stored only as hashes on the server, and protected with Windows DPAPI on the child PC.
 - The `ChildScreenTimeAgent` service runs as LocalSystem from boot. It does not inspect activity in session 0; it launches the visible agent in the currently active Windows desktop session, where foreground-window monitoring is technically possible.
 
 ## Current limitations
