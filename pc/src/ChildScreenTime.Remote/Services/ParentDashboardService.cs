@@ -6,7 +6,13 @@ namespace ChildScreenTime.Remote.Services;
 
 public sealed record DashboardDevice(Guid Id, string Name, DateTimeOffset PairedUtc, DateTimeOffset? LastSeenUtc, bool Revoked);
 public sealed record DashboardUsage(string Application, string Device, long Minutes, DateTimeOffset LastSeenUtc);
-public sealed record DashboardSnapshot(IReadOnlyList<DashboardDevice> Devices, IReadOnlyList<DashboardUsage> Usage, long TodayMinutes);
+public sealed record DashboardBrowserActivity(string Title, string Channel, string Device, long Minutes, DateTimeOffset LastSeenUtc);
+public sealed record DashboardSnapshot(
+    IReadOnlyList<DashboardDevice> Devices,
+    IReadOnlyList<DashboardUsage> Usage,
+    IReadOnlyList<DashboardBrowserActivity> BrowserActivity,
+    long TodayMinutes,
+    long TodayYouTubeMinutes);
 
 public sealed class ParentDashboardService(ApplicationDbContext database)
 {
@@ -41,10 +47,34 @@ public sealed class ParentDashboardService(ApplicationDbContext database)
             (long)Math.Round(value.Seconds / 60d),
             value.LastSeen)).ToList();
 
+        var browserRows = await database.BrowserActivityAggregates.AsNoTracking()
+            .Where(value => value.Device.OwnerUserId == ownerUserId && value.Device.RevokedUtc == null && value.LocalDate >= weekStart && value.LocalDate <= today)
+            .GroupBy(value => new { value.Device.Name, value.VideoId, value.Title, value.Channel })
+            .Select(group => new
+            {
+                group.Key.Name,
+                group.Key.Title,
+                group.Key.Channel,
+                Seconds = group.Sum(value => value.WatchedSeconds),
+                LastSeen = group.Max(value => value.LastSeenUtc)
+            })
+            .OrderByDescending(value => value.LastSeen)
+            .Take(200)
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
+        var browserActivity = browserRows.Select(value => new DashboardBrowserActivity(
+            value.Title,
+            value.Channel,
+            value.Name,
+            (long)Math.Round(value.Seconds / 60d),
+            value.LastSeen)).ToList();
+
         var todaySeconds = await database.UsageAggregates.AsNoTracking()
             .Where(value => value.Device.OwnerUserId == ownerUserId && value.Device.RevokedUtc == null && value.LocalDate == today)
             .SumAsync(value => value.ActiveSeconds, cancellationToken).ConfigureAwait(false);
-        return new DashboardSnapshot(devices, usage, todaySeconds / 60);
+        var todayYouTubeSeconds = await database.BrowserActivityAggregates.AsNoTracking()
+            .Where(value => value.Device.OwnerUserId == ownerUserId && value.Device.RevokedUtc == null && value.LocalDate == today)
+            .SumAsync(value => value.WatchedSeconds, cancellationToken).ConfigureAwait(false);
+        return new DashboardSnapshot(devices, usage, browserActivity, todaySeconds / 60, todayYouTubeSeconds / 60);
     }
 
     public async Task<string?> RevokeAsync(string ownerUserId, Guid deviceId, DateTimeOffset now, CancellationToken cancellationToken = default)
@@ -87,6 +117,9 @@ public sealed class ParentDashboardService(ApplicationDbContext database)
         }
 
         device.RevokedUtc ??= now;
+        var deletedBrowserActivity = await database.BrowserActivityAggregates
+            .Where(value => value.DeviceId == device.Id)
+            .ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
         var deleted = await database.UsageAggregates
             .Where(value => value.DeviceId == device.Id)
             .ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
@@ -95,10 +128,10 @@ public sealed class ParentDashboardService(ApplicationDbContext database)
             OwnerUserId = ownerUserId,
             DeviceId = device.Id,
             EventType = "remote_usage_deleted",
-            Summary = $"Remote usage history for '{device.Name}' was permanently deleted and the device was revoked.",
+            Summary = $"Remote usage and YouTube activity for '{device.Name}' were permanently deleted and the device was revoked.",
             TimestampUtc = now
         });
         await database.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return (device.Name, deleted);
+        return (device.Name, deleted + deletedBrowserActivity);
     }
 }

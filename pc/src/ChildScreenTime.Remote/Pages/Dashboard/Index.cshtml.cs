@@ -22,13 +22,16 @@ public sealed class DashboardModel(
 {
     public List<DeviceView> Devices { get; private set; } = [];
     public List<UsageView> WeeklyUsage { get; private set; } = [];
+    public List<BrowserActivityView> YouTubeActivity { get; private set; } = [];
     public long TodayMinutes { get; private set; }
+    public long TodayYouTubeMinutes { get; private set; }
     [TempData] public string? StatusMessage { get; set; }
     [TempData] public string? NewPairingCode { get; set; }
     [TempData] public string? PairingCodeExpiresLocal { get; set; }
 
     public sealed record DeviceView(Guid Id, string Name, DateTimeOffset PairedLocal, DateTimeOffset? LastSeenLocal, bool Revoked);
     public sealed record UsageView(string Application, string Device, long Minutes, DateTimeOffset LastSeenLocal);
+    public sealed record BrowserActivityView(string Title, string Channel, string Device, long Minutes, DateTimeOffset LastSeenLocal);
 
     public async Task OnGetAsync()
     {
@@ -39,7 +42,10 @@ public sealed class DashboardModel(
             value.Id, value.Name, value.PairedUtc.ToLocalTime(), value.LastSeenUtc?.ToLocalTime(), value.Revoked)).ToList();
         WeeklyUsage = snapshot.Usage.Select(value => new UsageView(
             value.Application, value.Device, value.Minutes, value.LastSeenUtc.ToLocalTime())).ToList();
+        YouTubeActivity = snapshot.BrowserActivity.Select(value => new BrowserActivityView(
+            value.Title, value.Channel, value.Device, value.Minutes, value.LastSeenUtc.ToLocalTime())).ToList();
         TodayMinutes = snapshot.TodayMinutes;
+        TodayYouTubeMinutes = snapshot.TodayYouTubeMinutes;
     }
 
     public async Task<IActionResult> OnPostCreatePairingCodeAsync(string currentPassword)

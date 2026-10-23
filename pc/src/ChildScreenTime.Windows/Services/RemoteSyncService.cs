@@ -17,6 +17,7 @@ public sealed class RemoteSyncService : IAsyncDisposable
 
     private readonly SettingsRepository settings;
     private readonly UsageRepository usage;
+    private readonly BrowserActivityRepository browserActivity;
     private readonly AuditRepository audit;
     private readonly Func<HttpMessageHandler> handlerFactory;
     private readonly CancellationTokenSource cancellation = new();
@@ -26,11 +27,13 @@ public sealed class RemoteSyncService : IAsyncDisposable
     public RemoteSyncService(
         SettingsRepository settings,
         UsageRepository usage,
+        BrowserActivityRepository browserActivity,
         AuditRepository audit,
         Func<HttpMessageHandler>? handlerFactory = null)
     {
         this.settings = settings;
         this.usage = usage;
+        this.browserActivity = browserActivity;
         this.audit = audit;
         this.handlerFactory = handlerFactory ?? CreateHandler;
         var remote = settings.GetSnapshot().RemoteSync;
@@ -108,6 +111,7 @@ public sealed class RemoteSyncService : IAsyncDisposable
             UpdateStatus(new RemoteSyncStatus(true, true, remote.LastSuccessfulSyncUtc, "Synchronizing usage summaries..."));
             var syncStartedUtc = DateTimeOffset.UtcNow;
             var overlapBoundary = remote.LastSuccessfulSyncUtc?.AddMinutes(-10);
+            browserActivity.ImportInboxAndPrune(settings.GetSnapshot().RetentionDays);
             var records = usage.GetAll()
                 .Where(item => overlapBoundary is null || item.LastSeenUtc >= overlapBoundary.Value)
                 .OrderBy(item => item.LocalDate)
@@ -117,6 +121,19 @@ public sealed class RemoteSyncService : IAsyncDisposable
                     item.ProcessName,
                     item.DisplayName,
                     item.ActiveSeconds,
+                    item.LastSeenUtc))
+                .ToArray();
+
+            var browserRecords = browserActivity.GetAll()
+                .Where(item => overlapBoundary is null || item.LastSeenUtc >= overlapBoundary.Value)
+                .OrderBy(item => item.LocalDate)
+                .ThenBy(item => item.VideoId, StringComparer.Ordinal)
+                .Select(item => new BrowserActivityUploadItem(
+                    item.LocalDate,
+                    item.VideoId,
+                    item.Title,
+                    item.Channel,
+                    item.WatchedSeconds,
                     item.LastSeenUtc))
                 .ToArray();
 
@@ -142,8 +159,28 @@ public sealed class RemoteSyncService : IAsyncDisposable
                 response.EnsureSuccessStatusCode();
             }
 
+            for (var offset = 0; offset < browserRecords.Length; offset += BatchSize)
+            {
+                var batch = browserRecords.Skip(offset).Take(BatchSize).ToArray();
+                using var request = new HttpRequestMessage(HttpMethod.Post, "api/v1/browser-activity/batch")
+                {
+                    Content = JsonContent.Create(new BrowserActivityUploadRequest(batch))
+                };
+                request.Headers.Authorization = new AuthenticationHeaderValue("Device", $"{remote.DeviceId}.{remote.DeviceToken}");
+                using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
+                if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+                {
+                    throw new InvalidOperationException("Remote access was revoked. Pair this PC again from the parent dashboard.");
+                }
+                if ((int)response.StatusCode == 429)
+                {
+                    throw new InvalidOperationException("The remote server is busy. Synchronization will retry automatically.");
+                }
+                response.EnsureSuccessStatusCode();
+            }
+
             settings.Update(value => value.RemoteSync.LastSuccessfulSyncUtc = syncStartedUtc);
-            UpdateStatus(new RemoteSyncStatus(true, false, syncStartedUtc, $"Synchronized {records.Length} usage summaries."));
+            UpdateStatus(new RemoteSyncStatus(true, false, syncStartedUtc, $"Synchronized {records.Length} app summaries and {browserRecords.Length} YouTube summaries."));
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
         {
@@ -186,7 +223,7 @@ public sealed class RemoteSyncService : IAsyncDisposable
     {
         BaseAddress = baseUri,
         Timeout = TimeSpan.FromSeconds(20),
-        DefaultRequestHeaders = { UserAgent = { new ProductInfoHeaderValue("ChildScreenTime", "1.2") } }
+        DefaultRequestHeaders = { UserAgent = { new ProductInfoHeaderValue("ChildScreenTime", "1.3") } }
     };
 
     private static HttpClientHandler CreateHandler() => new()

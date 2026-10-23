@@ -118,7 +118,7 @@
                     <StackPanel Margin="20" Width="640" HorizontalAlignment="Left">
                         <TextBlock Text="Secure parent dashboard" FontSize="22" FontWeight="SemiBold" />
                         <TextBlock Margin="0,6,0,18" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap"
-                                   Text="Pair this PC with your hosted parent dashboard. Only application names, dates, active durations, and last-seen times are uploaded. Screenshots, keystrokes, messages, files, and passwords are never collected." />
+                                   Text="Pair this PC with your hosted parent dashboard. Application names, dates, active durations, and last-seen times are uploaded. If the optional visible browser companion is installed, YouTube video title, channel, video ID, and active playback time are also uploaded. Screenshots, keystrokes, general browser history, messages, files, and passwords are never collected." />
 
                         <TextBlock Text="Dashboard server URL" FontWeight="SemiBold" />
                         <TextBox x:Name="RemoteServerUrl" AutomationProperties.Name="Remote dashboard server URL" ToolTip="For example, https://monitor.example.com" />
@@ -164,7 +164,7 @@
                         <TextBlock x:Name="PasswordMessage" TextWrapping="Wrap" Margin="4,10,0,0" />
                         <Separator Margin="0,24,0,18" />
                         <TextBlock Text="Privacy controls" FontSize="20" FontWeight="SemiBold" />
-                        <TextBlock Text="Deleting activity history is permanent and requires the parent password." TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="0,5,0,10" />
+                        <TextBlock Text="Deleting application and optional YouTube activity history is permanent and requires the parent password." TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="0,5,0,10" />
                         <Button Content="Delete all activity history" Click="DeleteHistory_Click" HorizontalAlignment="Left" Foreground="#B42318" />
                     </StackPanel>
                     <StackPanel Grid.Column="2">

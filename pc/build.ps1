@@ -10,8 +10,10 @@ $publish = Join-Path $artifacts 'publish'
 $installerOutput = Join-Path $artifacts 'installer'
 $appProject = Join-Path $root 'src\ChildScreenTime.Windows\ChildScreenTime.Windows.csproj'
 $serviceProject = Join-Path $root 'src\ChildScreenTime.Service\ChildScreenTime.Service.csproj'
+$browserHostProject = Join-Path $root 'src\ChildScreenTime.BrowserHost\ChildScreenTime.BrowserHost.csproj'
 $remoteProject = Join-Path $root 'src\ChildScreenTime.Remote\ChildScreenTime.Remote.csproj'
 $servicePublish = Join-Path $artifacts 'service-publish'
+$browserHostPublish = Join-Path $artifacts 'browser-host-publish'
 $testsProject = Join-Path $root 'tests\ChildScreenTime.Core.Tests\ChildScreenTime.Core.Tests.csproj'
 $windowsTestsProject = Join-Path $root 'tests\ChildScreenTime.Windows.Tests\ChildScreenTime.Windows.Tests.csproj'
 $remoteTestsProject = Join-Path $root 'tests\ChildScreenTime.Remote.Tests\ChildScreenTime.Remote.Tests.csproj'
@@ -24,6 +26,8 @@ if (-not (Test-Path -LiteralPath $dotnet)) { throw '.NET 10 SDK was not found.' 
 if ($LASTEXITCODE -ne 0) { throw 'Application restore failed.' }
 & $dotnet restore $serviceProject --configfile (Join-Path $root 'NuGet.config')
 if ($LASTEXITCODE -ne 0) { throw 'Service restore failed.' }
+& $dotnet restore $browserHostProject --configfile (Join-Path $root 'NuGet.config')
+if ($LASTEXITCODE -ne 0) { throw 'Browser host restore failed.' }
 & $dotnet restore $testsProject --configfile (Join-Path $root 'NuGet.config')
 if ($LASTEXITCODE -ne 0) { throw 'Test restore failed.' }
 & $dotnet restore $windowsTestsProject --configfile (Join-Path $root 'NuGet.config')
@@ -38,6 +42,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Application build failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Service build failed.' }
 & $dotnet build $remoteProject --configuration Release --no-restore
 if ($LASTEXITCODE -ne 0) { throw 'Remote dashboard build failed.' }
+& $dotnet build $browserHostProject --configuration Release --no-restore
+if ($LASTEXITCODE -ne 0) { throw 'Browser host build failed.' }
 & $dotnet test $testsProject --configuration Release --no-restore
 if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
 & $dotnet test $windowsTestsProject --configuration Release --no-restore
@@ -53,6 +59,12 @@ if ($LASTEXITCODE -ne 0) { throw 'Application publish failed.' }
     -p:DebugType=None -p:DebugSymbols=false --output $servicePublish
 if ($LASTEXITCODE -ne 0) { throw 'Service publish failed.' }
 Copy-Item -LiteralPath (Join-Path $servicePublish 'ChildScreenTime.Service.exe') -Destination $publish -Force
+& $dotnet publish $browserHostProject --configuration Release --runtime win-x64 --self-contained true --no-restore `
+    -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+    -p:DebugType=None -p:DebugSymbols=false --output $browserHostPublish
+if ($LASTEXITCODE -ne 0) { throw 'Browser host publish failed.' }
+Copy-Item -LiteralPath (Join-Path $browserHostPublish 'ChildScreenTime.BrowserHost.exe') -Destination $publish -Force
+Copy-Item -LiteralPath (Join-Path $root 'browser-extension') -Destination (Join-Path $publish 'BrowserExtension') -Recurse -Force
 & $dotnet publish $remoteProject --configuration Release --no-restore --output $remotePublish
 if ($LASTEXITCODE -ne 0) { throw 'Remote dashboard publish failed.' }
 

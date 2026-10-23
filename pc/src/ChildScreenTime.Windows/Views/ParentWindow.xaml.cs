@@ -249,6 +249,7 @@ public partial class ParentWindow : Window
             settings.AppRules = candidate.AppRules;
         });
         services.Usage.FlushAndPrune(retentionDays);
+        services.BrowserActivity.ImportInboxAndPrune(retentionDays);
         services.Audit.Add("controls_updated", "Screen-time controls and application rules were updated.");
         if (wasMonitoring != candidate.MonitoringEnabled)
         {
@@ -320,7 +321,7 @@ public partial class ParentWindow : Window
 
         var confirmation = System.Windows.MessageBox.Show(
             this,
-            "Delete all recorded application-usage history? This cannot be undone.",
+            "Delete all recorded application usage and YouTube watch activity? This cannot be undone.",
             "Delete activity history",
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning,
@@ -331,7 +332,8 @@ public partial class ParentWindow : Window
         }
 
         services.Usage.DeleteAll();
-        services.Audit.Add("usage_deleted", "A parent permanently deleted all application-usage history.");
+        services.BrowserActivity.DeleteAll();
+        services.Audit.Add("usage_deleted", "A parent permanently deleted all application usage and YouTube watch activity.");
         LoadActivity();
         LoadAudit();
         SetSaveMessage("Activity history deleted permanently.", isError: false);

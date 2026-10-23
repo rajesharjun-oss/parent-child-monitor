@@ -13,6 +13,8 @@ public sealed class AppDataPaths
     public string Root { get; }
     public string SettingsFile => Path.Combine(Root, "settings.protected");
     public string UsageFile => Path.Combine(Root, "usage.protected");
+    public string BrowserUsageFile => Path.Combine(Root, "browser-usage.protected");
+    public string BrowserInboxDirectory => Path.Combine(Root, "browser-inbox");
     public string AuditFile => Path.Combine(Root, "audit.protected");
     public string DiagnosticLog => Path.Combine(Root, "diagnostics.log");
 }

@@ -18,6 +18,7 @@ public static partial class RemoteApi
         var api = endpoints.MapGroup("/api/v1").RequireRateLimiting("api");
         api.MapPost("/devices/pair", PairDeviceAsync).RequireRateLimiting("pairing");
         api.MapPost("/usage/batch", UploadUsageAsync).RequireRateLimiting("device");
+        api.MapPost("/browser-activity/batch", UploadBrowserActivityAsync).RequireRateLimiting("device");
         return endpoints;
     }
 
@@ -135,5 +136,76 @@ public static partial class RemoteApi
         device.LastSeenUtc = now;
         await database.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return TypedResults.Ok(new UsageUploadResponse(request.Records.Count, now));
+    }
+    private static async Task<Results<Ok<BrowserActivityUploadResponse>, BadRequest, UnauthorizedHttpResult>> UploadBrowserActivityAsync(
+        BrowserActivityUploadRequest request,
+        HttpRequest httpRequest,
+        DeviceAuthenticator authenticator,
+        ApplicationDbContext database,
+        TimeProvider clock,
+        CancellationToken cancellationToken)
+    {
+        var device = await authenticator.AuthenticateAsync(httpRequest, cancellationToken).ConfigureAwait(false);
+        if (device is null)
+        {
+            return TypedResults.Unauthorized();
+        }
+        if (request.Records is null || request.Records.Count > 500)
+        {
+            return TypedResults.BadRequest();
+        }
+
+        var now = clock.GetUtcNow();
+        var oldestDate = DateOnly.FromDateTime(now.UtcDateTime.AddDays(-366));
+        var newestDate = DateOnly.FromDateTime(now.UtcDateTime.AddDays(1));
+        foreach (var record in request.Records)
+        {
+            if (record is null ||
+                !BrowserActivityPolicy.IsValidVideoId(record.VideoId) ||
+                !BrowserActivityPolicy.IsSafeText(record.Title, 1, 200) ||
+                !BrowserActivityPolicy.IsSafeText(record.Channel, 0, 120) ||
+                record.WatchedSeconds is < 0 or > 86400 ||
+                record.LocalDate < oldestDate || record.LocalDate > newestDate ||
+                record.LastSeenUtc > now.AddMinutes(5) || record.LastSeenUtc < now.AddDays(-367))
+            {
+                return TypedResults.BadRequest();
+            }
+        }
+
+        foreach (var incoming in request.Records)
+        {
+            var existing = await database.BrowserActivityAggregates.SingleOrDefaultAsync(
+                value => value.DeviceId == device.Id &&
+                         value.LocalDate == incoming.LocalDate &&
+                         value.VideoId == incoming.VideoId,
+                cancellationToken).ConfigureAwait(false);
+
+            if (existing is null)
+            {
+                database.BrowserActivityAggregates.Add(new BrowserActivityAggregate
+                {
+                    DeviceId = device.Id,
+                    LocalDate = incoming.LocalDate,
+                    VideoId = incoming.VideoId,
+                    Title = incoming.Title.Trim(),
+                    Channel = incoming.Channel.Trim(),
+                    WatchedSeconds = incoming.WatchedSeconds,
+                    LastSeenUtc = incoming.LastSeenUtc,
+                    UpdatedUtc = now
+                });
+            }
+            else
+            {
+                existing.WatchedSeconds = Math.Max(existing.WatchedSeconds, incoming.WatchedSeconds);
+                existing.LastSeenUtc = incoming.LastSeenUtc > existing.LastSeenUtc ? incoming.LastSeenUtc : existing.LastSeenUtc;
+                existing.Title = incoming.Title.Trim();
+                existing.Channel = incoming.Channel.Trim();
+                existing.UpdatedUtc = now;
+            }
+        }
+
+        device.LastSeenUtc = now;
+        await database.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return TypedResults.Ok(new BrowserActivityUploadResponse(request.Records.Count, now));
     }
 }

@@ -25,6 +25,7 @@
     <article><span>Paired devices</span><strong>@Model.Devices.Count</strong></article>
     <article><span>Active today</span><strong>@Model.TodayMinutes min</strong></article>
     <article><span>Applications this week</span><strong>@Model.WeeklyUsage.Count</strong></article>
+    <article><span>YouTube today</span><strong>@Model.TodayYouTubeMinutes min</strong></article>
 </section>
 
 <section>
@@ -76,6 +77,27 @@
             @foreach (var item in Model.WeeklyUsage)
             {
                 <tr><td>@item.Application</td><td>@item.Device</td><td>@item.Minutes min</td><td>@item.LastSeenLocal.ToString("g")</td></tr>
+            }
+            </tbody>
+        </table></div>
+    }
+</section>
+
+<section>
+    <h2>YouTube watch activity</h2>
+    <p class="muted">Playback time is counted only while a YouTube video is actively playing in a visible monitored tab.</p>
+    @if (Model.YouTubeActivity.Count == 0)
+    {
+        <div class="empty"><p>No synchronized YouTube playback has arrived yet.</p></div>
+    }
+    else
+    {
+        <div class="table-wrap"><table>
+            <thead><tr><th>Video</th><th>Channel</th><th>Device</th><th>Watched</th><th>Last watched</th></tr></thead>
+            <tbody>
+            @foreach (var item in Model.YouTubeActivity)
+            {
+                <tr><td>@item.Title</td><td>@(string.IsNullOrWhiteSpace(item.Channel) ? "Unknown channel" : item.Channel)</td><td>@item.Device</td><td>@item.Minutes min</td><td>@item.LastSeenLocal.ToString("g")</td></tr>
             }
             </tbody>
         </table></div>

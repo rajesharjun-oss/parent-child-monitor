@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Child Screen Time - YouTube Activity",
+  "version": "1.0.0",
+  "description": "Visible companion extension that reports YouTube playback time to Child Screen Time.",
+  "permissions": ["nativeMessaging"],
+  "host_permissions": ["https://www.youtube.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["youtube.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "Child Screen Time YouTube monitoring is enabled"
+  }
+}

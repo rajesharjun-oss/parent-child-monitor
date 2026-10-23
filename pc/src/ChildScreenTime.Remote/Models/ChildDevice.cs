@@ -11,4 +11,5 @@ public sealed class ChildDevice
     public DateTimeOffset? LastSeenUtc { get; set; }
     public DateTimeOffset? RevokedUtc { get; set; }
     public List<UsageAggregate> Usage { get; set; } = [];
+    public List<BrowserActivityAggregate> BrowserActivity { get; set; } = [];
 }

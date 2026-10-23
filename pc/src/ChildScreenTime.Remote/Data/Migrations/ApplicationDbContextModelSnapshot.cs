@@ -94,6 +94,56 @@ namespace ChildScreenTime.Remote.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+
+            modelBuilder.Entity("ChildScreenTime.Remote.Models.BrowserActivityAggregate", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Channel")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("LastSeenUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("LocalDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VideoId")
+                        .IsRequired()
+                        .HasMaxLength(11)
+                        .HasColumnType("character(11)")
+                        .IsFixedLength();
+
+                    b.Property<long>("WatchedSeconds")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeviceId", "LocalDate");
+
+                    b.HasIndex("DeviceId", "LocalDate", "VideoId")
+                        .IsUnique();
+
+                    b.ToTable("BrowserActivityAggregates");
+                });
+
             modelBuilder.Entity("ChildScreenTime.Remote.Models.ChildDevice", b =>
                 {
                     b.Property<Guid>("Id")
@@ -376,6 +426,18 @@ namespace ChildScreenTime.Remote.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+
+            modelBuilder.Entity("ChildScreenTime.Remote.Models.BrowserActivityAggregate", b =>
+                {
+                    b.HasOne("ChildScreenTime.Remote.Models.ChildDevice", "Device")
+                        .WithMany("BrowserActivity")
+                        .HasForeignKey("DeviceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Device");
+                });
+
             modelBuilder.Entity("ChildScreenTime.Remote.Models.ChildDevice", b =>
                 {
                     b.HasOne("ChildScreenTime.Remote.Models.ApplicationUser", "Owner")
@@ -473,6 +535,8 @@ namespace ChildScreenTime.Remote.Data.Migrations
 
             modelBuilder.Entity("ChildScreenTime.Remote.Models.ChildDevice", b =>
                 {
+                    b.Navigation("BrowserActivity");
+
                     b.Navigation("Usage");
                 });
 #pragma warning restore 612, 618

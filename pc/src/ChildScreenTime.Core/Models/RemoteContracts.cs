@@ -14,3 +14,15 @@ public sealed record UsageUploadItem(
     DateTimeOffset LastSeenUtc);
 
 public sealed record UsageUploadResponse(int AcceptedRecords, DateTimeOffset ReceivedAtUtc);
+
+public sealed record BrowserActivityUploadRequest(IReadOnlyList<BrowserActivityUploadItem> Records);
+
+public sealed record BrowserActivityUploadItem(
+    DateOnly LocalDate,
+    string VideoId,
+    string Title,
+    string Channel,
+    long WatchedSeconds,
+    DateTimeOffset LastSeenUtc);
+
+public sealed record BrowserActivityUploadResponse(int AcceptedRecords, DateTimeOffset ReceivedAtUtc);

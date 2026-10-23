@@ -16,6 +16,7 @@ public sealed class MonitoringCoordinator : IAsyncDisposable
 
     private readonly SettingsRepository settingsRepository;
     private readonly UsageRepository usageRepository;
+    private readonly BrowserActivityRepository browserActivityRepository;
     private readonly AuditRepository auditRepository;
     private readonly WindowsActivityProbe activityProbe;
     private readonly CancellationTokenSource cancellation = new();
@@ -25,11 +26,13 @@ public sealed class MonitoringCoordinator : IAsyncDisposable
     public MonitoringCoordinator(
         SettingsRepository settingsRepository,
         UsageRepository usageRepository,
+        BrowserActivityRepository browserActivityRepository,
         AuditRepository auditRepository,
         WindowsActivityProbe activityProbe)
     {
         this.settingsRepository = settingsRepository;
         this.usageRepository = usageRepository;
+        this.browserActivityRepository = browserActivityRepository;
         this.auditRepository = auditRepository;
         this.activityProbe = activityProbe;
     }
@@ -104,6 +107,7 @@ public sealed class MonitoringCoordinator : IAsyncDisposable
                 if (ticksSinceFlush >= 6)
                 {
                     usageRepository.FlushAndPrune(settings.RetentionDays);
+                    browserActivityRepository.ImportInboxAndPrune(settings.RetentionDays);
                     ticksSinceFlush = 0;
                 }
             }
@@ -114,7 +118,9 @@ public sealed class MonitoringCoordinator : IAsyncDisposable
         }
         finally
         {
-            usageRepository.FlushAndPrune(settingsRepository.GetSnapshot().RetentionDays);
+            var retentionDays = settingsRepository.GetSnapshot().RetentionDays;
+            usageRepository.FlushAndPrune(retentionDays);
+            browserActivityRepository.ImportInboxAndPrune(retentionDays);
         }
     }
 
