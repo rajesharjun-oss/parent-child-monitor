@@ -37,11 +37,16 @@ public sealed partial class RetentionCleanupService(
         var auditBoundary = now.AddDays(-366);
         var pairingBoundary = now.AddDays(-1);
         var usageDeleted = await database.UsageAggregates.Where(value => value.LocalDate < oldestUsageDate).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
+        var browserDeleted = await database.BrowserActivityAggregates.Where(value => value.LocalDate < oldestUsageDate).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
         await database.PairingCodes.Where(value => value.ExpiresUtc < pairingBoundary).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
         await database.SecurityAuditEvents.Where(value => value.TimestampUtc < auditBoundary).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
         if (usageDeleted > 0)
         {
             LogUsageDeleted(logger, usageDeleted);
+        }
+        if (browserDeleted > 0)
+        {
+            LogBrowserActivityDeleted(logger, browserDeleted);
         }
     }
 
@@ -50,4 +55,7 @@ public sealed partial class RetentionCleanupService(
 
     [LoggerMessage(EventId = 1002, Level = LogLevel.Information, Message = "Removed {Count} expired usage aggregates.")]
     private static partial void LogUsageDeleted(ILogger logger, int count);
+
+    [LoggerMessage(EventId = 1003, Level = LogLevel.Information, Message = "Removed {Count} expired YouTube activity aggregates.")]
+    private static partial void LogBrowserActivityDeleted(ILogger logger, int count);
 }
