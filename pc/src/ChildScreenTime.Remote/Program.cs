@@ -13,11 +13,7 @@ using Microsoft.Extensions.Options;
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables("CST_");
 
-var connectionString = builder.Configuration.GetConnectionString("RemoteDatabase");
-if (string.IsNullOrWhiteSpace(connectionString))
-{
-    throw new InvalidOperationException("ConnectionStrings:RemoteDatabase is required.");
-}
+var connectionString = ResolveConnectionString(builder.Configuration);
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
 builder.Services.AddOptions<RemoteOptions>()
     .Bind(builder.Configuration.GetSection(RemoteOptions.SectionName))
@@ -154,6 +150,46 @@ if (remoteOptions.ApplyMigrationsOnStartup)
 }
 
 await app.RunAsync().ConfigureAwait(false);
+
+static string ResolveConnectionString(IConfiguration configuration)
+{
+    var configured = configuration.GetConnectionString("RemoteDatabase");
+    if (!string.IsNullOrWhiteSpace(configured))
+    {
+        return configured;
+    }
+
+    var host = configuration["PGHOST"];
+    var database = configuration["PGDATABASE"];
+    var username = configuration["PGUSER"];
+    var password = configuration["PGPASSWORD"];
+    if (string.IsNullOrWhiteSpace(host) ||
+        string.IsNullOrWhiteSpace(database) ||
+        string.IsNullOrWhiteSpace(username) ||
+        string.IsNullOrWhiteSpace(password))
+    {
+        throw new InvalidOperationException(
+            "ConnectionStrings:RemoteDatabase or PGHOST/PGDATABASE/PGUSER/PGPASSWORD is required.");
+    }
+
+    var port = 5432;
+    if (int.TryParse(configuration["PGPORT"], out var configuredPort) &&
+        configuredPort is > 0 and <= 65535)
+    {
+        port = configuredPort;
+    }
+
+    var builder = new Npgsql.NpgsqlConnectionStringBuilder
+    {
+        Host = host,
+        Port = port,
+        Database = database,
+        Username = username,
+        Password = password,
+        SslMode = Npgsql.SslMode.Prefer
+    };
+    return builder.ConnectionString;
+}
 
 static string DeviceRateLimitKey(string authorization, string? address)
 {
