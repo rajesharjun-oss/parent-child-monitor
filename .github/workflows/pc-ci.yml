@@ -34,6 +34,7 @@ jobs:
         run: |
           dotnet restore pc/src/ChildScreenTime.Windows/ChildScreenTime.Windows.csproj --locked-mode --configfile pc/NuGet.config
           dotnet restore pc/src/ChildScreenTime.Service/ChildScreenTime.Service.csproj --locked-mode --configfile pc/NuGet.config
+          dotnet restore pc/src/ChildScreenTime.BrowserHost/ChildScreenTime.BrowserHost.csproj --locked-mode --configfile pc/NuGet.config
           dotnet restore pc/tests/ChildScreenTime.Core.Tests/ChildScreenTime.Core.Tests.csproj --locked-mode --configfile pc/NuGet.config
           dotnet restore pc/tests/ChildScreenTime.Windows.Tests/ChildScreenTime.Windows.Tests.csproj --locked-mode --configfile pc/NuGet.config
           dotnet restore pc/src/ChildScreenTime.Remote/ChildScreenTime.Remote.csproj --locked-mode --configfile pc/NuGet.config
@@ -50,6 +51,7 @@ jobs:
         run: |
           dotnet build pc/src/ChildScreenTime.Windows/ChildScreenTime.Windows.csproj --configuration Release --no-restore
           dotnet build pc/src/ChildScreenTime.Service/ChildScreenTime.Service.csproj --configuration Release --no-restore
+          dotnet build pc/src/ChildScreenTime.BrowserHost/ChildScreenTime.BrowserHost.csproj --configuration Release --no-restore
           dotnet build pc/src/ChildScreenTime.Remote/ChildScreenTime.Remote.csproj --configuration Release --no-restore
 
       - name: Test
@@ -65,6 +67,9 @@ jobs:
           dotnet publish pc/src/ChildScreenTime.Windows/ChildScreenTime.Windows.csproj --configuration Release --runtime win-x64 --self-contained true --no-restore -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false --output pc/artifacts/publish
           dotnet publish pc/src/ChildScreenTime.Service/ChildScreenTime.Service.csproj --configuration Release --runtime win-x64 --self-contained true --no-restore -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false --output pc/artifacts/service-publish
           Copy-Item -LiteralPath pc/artifacts/service-publish/ChildScreenTime.Service.exe -Destination pc/artifacts/publish -Force
+          dotnet publish pc/src/ChildScreenTime.BrowserHost/ChildScreenTime.BrowserHost.csproj --configuration Release --runtime win-x64 --self-contained true --no-restore -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false --output pc/artifacts/browser-host-publish
+          Copy-Item -LiteralPath pc/artifacts/browser-host-publish/ChildScreenTime.BrowserHost.exe -Destination pc/artifacts/publish -Force
+          Copy-Item -LiteralPath pc/browser-extension -Destination pc/artifacts/publish/BrowserExtension -Recurse -Force
           dotnet publish pc/src/ChildScreenTime.Remote/ChildScreenTime.Remote.csproj --configuration Release --no-restore --output pc/artifacts/remote-publish
 
       - name: Upload application
